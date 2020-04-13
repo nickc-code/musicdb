@@ -13,9 +13,19 @@ import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response
+from flask import render_template
+from flask import jsonify
+
+
+
+
+
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
+
+
+
 
 
 #
@@ -30,6 +40,30 @@ app = Flask(__name__, template_folder=tmpl_dir)
 #     DATABASEURI = "postgresql://gravano:foobar@35.243.220.243/proj1part2"
 #
 DATABASEURI = "postgresql://ncc2137:3749@35.231.103.173/proj1part2"
+
+
+
+
+# delete database array below later
+database = [
+  {
+  "id": 0,
+  "Name": "Tom Brady",
+  "Team": "New England Patriots",
+  "Bio": "Thomas Edward Patrick Brady Jr. (bord August 3, 1997) is an American footbal quarterback for the New England Patriots of the National Football League (NFL). He has won six Super Bowls, the most of any football player ever. Due to his various accomplishments and records, he is considered by fans and soprts analysts to be the G.O.A.T (greatest of all time).",
+  "Rating": 97.7,
+  "Height": "6-4",
+  "Weight": "225 lbs",
+  "Age": 41,
+  "Experience": "20th season",
+  "pic":"http://static.nfl.com/static/content/public/static/img/fantasy/transparent/200x200/BRA371156.png"
+
+  },
+  ]
+
+Lookup_matches=[
+
+]
 
 
 #
@@ -102,17 +136,17 @@ def index():
   """
 
   # DEBUG: this is debugging code to see what request looks like
-  print(request.args)
+  # print(request.args)
 
 
   #
   # example of a database query
   #
-  cursor = g.conn.execute("SELECT name FROM test")
-  names = []
-  for result in cursor:
-    names.append(result['name'])  # can also be accessed using result[0]
-  cursor.close()
+  # cursor = g.conn.execute("SELECT title FROM song")
+  # names = []
+  # for result in cursor:
+  #   names.append(result['title'])  # can also be accessed using result[0]
+  # cursor.close()
 
   #
   # Flask uses Jinja templates, which is an extension to HTML where you can
@@ -140,14 +174,14 @@ def index():
   #     <div>{{n}}</div>
   #     {% endfor %}
   #
-  context = dict(data = names)
+  # context = dict(data = names)
 
 
   #
   # render_template looks in the templates/ folder for files.
   # for example, the below file reads template/index.html
   #
-  return render_template("index.html", **context)
+  return render_template("Home.html")
 
 #
 # This is an example of a different path.  You can see it at:
@@ -175,6 +209,398 @@ def login():
     abort(401)
     this_is_never_executed()
 
+
+# Added code
+@app.route('/Search')
+def Search(database=database):
+    return render_template('Search.html', database=database)
+
+@app.route('/match', methods=['GET', 'POST'])
+def match():
+  global database
+  global Lookup_matches
+  Lookup_matches.clear()
+  json_data = request.get_json()
+  Lookup=json_data["Lookup"]
+  x=0;
+  while (x<len(database)):
+    if Lookup.lower() in database[x]["Name"].lower():
+      Lookup_matches.append(database[x]);
+    elif Lookup.lower() in database[x]["Team"].lower():
+      Lookup_matches.append(database[x]);
+    elif Lookup.lower() in database[x]["Bio"].lower():
+      Lookup_matches.append(database[x]);
+    elif str(Lookup) in str(database[x]["Rating"]):
+      Lookup_matches.append(database[x]);
+    elif Lookup in database[x]["Height"]:
+      Lookup_matches.append(database[x]);
+    elif Lookup in database[x]["Weight"]:
+      Lookup_matches.append(database[x]);
+    elif str(Lookup) in str(database[x]["Age"]):
+      Lookup_matches.append(database[x]);
+    elif Lookup in database[x]["Experience"]:
+      Lookup_matches.append(database[x]);
+    x=x+1;
+  return jsonify(Lookup_matches = Lookup_matches)
+
+
+@app.route('/Home')
+def Home():
+    return render_template('Home.html')
+
+@app.route('/Browse')
+def Browse():
+    return render_template('Browse.html')
+
+@app.route('/Playlists')
+def Playlists():
+    return render_template('Playlists.html')
+
+"""
+GET FUNCTIONALITY - Kanak's code
+"""
+
+@app.route('/search_artist')
+def search_artist_k():
+    return render_template('Search_Artist_K.html')
+
+@app.route('/search_song')
+def search_song_k():
+    return render_template('Search_Song_K.html')
+
+@app.route('/search_album')
+def search_album_k():
+    return render_template('Search_Album_K.html')
+
+@app.route('/search_playlist')
+def search_playlist_k():
+    return render_template('Search_Playlist_K.html')
+
+@app.route('/search_user')
+def search_user_k():
+    return render_template('Search_User_K.html')
+
+@app.route('/Add_Song')
+def Add_Song():
+  cursor = g.conn.execute('SELECT * from song Order by song_id asc')
+  x = []
+  for result in cursor:
+    x.append({
+      'song_id': str(result['song_id']),
+      'title': result['title'],
+      'audio_file_link': str(result['audio_file_link']),
+      'time': str(result['time']),
+      'genre': result['genre'],
+      'explicit': result['explicit']
+    })
+  cursor.close()
+
+  context = dict(data = x)
+  unique_id=len(x)+1
+  return render_template('Add_Song.html', **context, unique_id=unique_id)
+
+@app.route('/Add_Song_to_Playlist')
+def Add_Song_to_Playlist():
+
+
+# cursor = g.conn.execute("SELECT title FROM song")
+  cursor = g.conn.execute("SELECT song.song_id, title, playlist_id from song join songplaylist on song.song_id=songplaylist.song_id Order by playlist_id, song_id asc")
+
+  x = []
+  for result in cursor:
+    x.append({
+      'song_id': str(result['song_id']),
+      'title': result['title'],
+      'playlist_id': str(result['playlist_id'])
+    })
+  cursor.close()
+
+  context = dict(data = x)
+
+
+
+  return render_template('Add_Song_to_Playlist.html', **context)
+
+@app.route('/user_follow_user')
+def user_follow_user():
+  cursor = g.conn.execute("SELECT u1.user_id as follower_id, u1.name as follower_name, u2.user_id as followee_id, u2.name as followee_name from user_account u1, userfollowuser ufu, user_account u2 where u1.user_id = ufu.user_id_1 and ufu.user_id_2 = u2.user_id;")
+
+  x = []
+  for result in cursor:
+    x.append({
+      'follower_id': str(result['follower_id']),
+      'follower_name': result['follower_name'],
+      'followee_id': str(result['followee_id']),
+      'followee_name': result['followee_name']
+    })
+  cursor.close()
+
+  context = dict(data = x)
+  return render_template('user_follow_user.html', **context)
+
+
+@app.route('/user_follow_artist')
+def user_follow_artist():
+  cursor = g.conn.execute("SELECT userfollowartist.user_id, user_account.name as user_name, userfollowartist.artist_id, artist.name from userfollowartist join user_account on userfollowartist.user_id=user_account.user_id join artist on userfollowartist.artist_id=artist.artist_id")
+  x = []
+  for result in cursor:
+    x.append({
+      'user_id': str(result['user_id']),
+      'username': result['user_name'],
+      'artist_id': str(result['artist_id']),
+      'artist_name': result['name']
+    })
+  cursor.close()
+
+  context = dict(data = x)
+  return render_template('user_follow_artist.html', **context)
+
+
+@app.route('/user_follow_playlist')
+def user_follow_playlist():
+  cursor = g.conn.execute("SELECT userfollowplaylist.user_id, user_account.name as username, userfollowplaylist.playlist_id, playlist.name from userfollowplaylist join user_account on userfollowplaylist.user_id=user_account.user_id join playlist on userfollowplaylist.playlist_id=playlist.playlist_id;")
+  x = []
+  for result in cursor:
+    x.append({
+      'user_id': str(result['user_id']),
+      'username': result['username'],
+      'playlist_id': str(result['playlist_id']),
+      'playlist_name': result['name']
+    })
+  cursor.close()
+
+  context = dict(data = x)
+  return render_template('user_follow_playlist.html', **context)
+
+"""
+Query Methods - Kanak's code
+"""
+
+
+
+@app.route('/songplaylist', methods=['GET', 'POST'])
+def songplaylist():
+  json_data = request.get_json()
+  Song=json_data['song_id']
+  Playlist=json_data['playlist_id']
+  g.conn.execute('INSERT INTO songplaylist VALUES (%s, %s)', int(Song), int(Playlist))
+
+  cursor = g.conn.execute("SELECT song.song_id, title, playlist_id from song join songplaylist on song.song_id=songplaylist.song_id Order by playlist_id, song_id asc")
+  list_to_return=[]
+  for result in cursor:
+    list_to_return.append({
+      'song_id': str(result['song_id']),
+      'title': result['title'],
+      'playlist_id': str(result['playlist_id'])
+      })
+  cursor.close()
+  # return jsonify(s=None)
+  return jsonify(list_to_return=list_to_return)
+
+
+# 
+@app.route('/songadd', methods=['GET', 'POST'])
+def songadd():
+  cursor = g.conn.execute('SELECT * from song Order by song_id asc')
+  x = []
+  for result in cursor:
+    x.append({
+      'song_id': str(result['song_id']),
+      'title': result['title'],
+      'audio_file_link': str(result['audio_file_link']),
+      'time': str(result['time']),
+      'genre': result['genre'],
+      'explicit': result['explicit']
+    })
+  cursor.close()
+  unique_id=len(x)+1
+
+  json_data = request.get_json()
+  title=json_data['title']
+  audio_file_link=json_data["audio_file_link"]
+  time=json_data["time"]
+  genre=json_data["genre"]
+  explicit=json_data["explicit"]
+  g.conn.execute('INSERT INTO song VALUES (%s, %s, %s, %s, %s, %s)', int(unique_id), title, audio_file_link, time, genre, explicit)
+
+  return jsonify(s=None)
+
+
+
+
+
+
+
+@app.route('/userfollowuser', methods=['GET', 'POST'])
+def userfollowuser():
+  json_data = request.get_json()
+  User1=json_data['song_id']
+  User2=json_data['playlist_id']
+  g.conn.execute('INSERT INTO userfollowuser VALUES (%s, %s)', int(User1), int(User2))
+
+  cursor = g.conn.execute("SELECT u1.user_id as follower_id, u1.name as follower_name, u2.user_id as followee_id, u2.name as followee_name from user_account u1, userfollowuser ufu, user_account u2 where u1.user_id = ufu.user_id_1 and ufu.user_id_2 = u2.user_id;")
+  list_to_return=[]
+  for result in cursor:
+    list_to_return.append({
+      'follower_id': str(result['follower_id']),
+      'follower_name': result['follower_name'],
+      'followee_id': str(result['followee_id']),
+      'followee_name': result['followee_name']
+    })
+  cursor.close()
+
+  return jsonify(list_to_return=list_to_return)
+  # return jsonify(list_to_return=list_to_return)
+
+
+
+@app.route('/userfollowartist', methods=['GET', 'POST'])
+def userfollowartist():
+  json_data = request.get_json()
+  User1=json_data['song_id']
+  Artist=json_data['playlist_id']
+  g.conn.execute('INSERT INTO userfollowartist VALUES (%s, %s)', int(User1), int(Artist))
+  cursor = g.conn.execute("SELECT userfollowartist.user_id, user_account.name as user_name, userfollowartist.artist_id, artist.name from userfollowartist join user_account on userfollowartist.user_id=user_account.user_id join artist on userfollowartist.artist_id=artist.artist_id")
+  x = []
+  for result in cursor:
+    x.append({
+      'user_id': str(result['user_id']),
+      'username': result['user_name'],
+      'artist_id': str(result['artist_id']),
+      'artist_name': result['name']
+    })
+  cursor.close()
+
+
+  
+
+  return jsonify(x=x)
+
+
+
+@app.route('/userfollowplaylist', methods=['GET', 'POST'])
+def userfollowplaylist():
+  json_data = request.get_json()
+  User=json_data['song_id']
+  Playlist=json_data['playlist_id']
+  g.conn.execute('INSERT INTO userfollowplaylist VALUES (%s, %s)', int(User), int(Playlist))
+  cursor = g.conn.execute("SELECT userfollowplaylist.user_id, user_account.name as username, userfollowplaylist.playlist_id, playlist.name from userfollowplaylist join user_account on userfollowplaylist.user_id=user_account.user_id join playlist on userfollowplaylist.playlist_id=playlist.playlist_id;")
+  x = []
+  for result in cursor:
+    x.append({
+      'user_id': str(result['user_id']),
+      'username': result['username'],
+      'playlist_id': str(result['playlist_id']),
+      'playlist_name': result['name']
+    })
+  cursor.close()
+
+  return jsonify(x=x)
+
+
+
+
+
+@app.route('/get_artist_details', methods=['GET'])
+def get_artist_details_k():
+  artist_id = int(request.args['artist_id'])
+  cursor = g.conn.execute("SELECT * FROM artist where artist_id={};".format(artist_id))
+  artists = []
+  for result in cursor:
+    artists.append({
+      'username': result['username'],
+      'name': result['name'],
+      'date_of_joining': result['date_of_joining'],
+      'date_of_birth': result['date_of_birth']
+    })
+  cursor.close()
+  return jsonify(Lookup_matches=artists)
+
+
+@app.route('/get_song_details', methods=['GET'])
+def get_song_details_k():
+  song_id = int(request.args["song_id"])
+  cursor = g.conn.execute(
+      "select song.song_id, min(song.title) as title, string_agg(artist.name, ', ') as artist_names, min(album.name) "
+      "as album_name, min(audio_file_link) as audio_file_link from song, songalbum, albumartist, artist, album where "
+      "song.song_id = songalbum.song_id and songalbum.album_id = album.album_id and songalbum.album_id = "
+      "albumartist.album_id and albumartist.artist_id = artist.artist_id and song.song_id = {} group by "
+      "song.song_id;".format(
+          song_id))
+  songs = []
+  for result in cursor:
+    songs.append({
+      'title': result['title'],
+      'audio_file_link': result['audio_file_link'],
+      'album_name': result['album_name'],
+      'artist_names': result['artist_names']
+    })
+  ## IF THERE ARE MULTIPLE ARTISTS THIS WILL RETURN MULTIPLE ROWS
+  cursor.close()
+  return jsonify(Lookup_matches=songs)
+
+@app.route('/get_album_details', methods=['GET'])
+def get_album_details_k():
+  album_id = int(request.args["album_id"])
+  cursor = g.conn.execute(
+      "select id, min(album_name) as album_name, min(total_length) as total_length, string_agg(artist.name, ', "
+      "') as artist_names, bool_and(any_explicit) as any_explicit from (select album.album_id as id, min(name) as "
+      "album_name, sum(time) as total_length, bool_or(explicit) as any_explicit from songalbum, song, album where "
+      "songalbum.song_id = song.song_id and album.album_id = songalbum.album_id and album.album_id = {} group by "
+      "album.album_id) as foo, albumartist, artist where albumartist.album_id = foo.id and artist.artist_id = "
+      "albumartist.artist_id group by id;".format(
+          album_id))
+  albums = []
+  for result in cursor:
+    albums.append({
+      'album_name': result['album_name'],
+      'artist_names': result['artist_names'],
+      'total_length': str(result['total_length']),
+      'any_explicit': str(result['any_explicit'])
+    })
+  cursor.close()
+  return jsonify(Lookup_matches=albums)
+
+@app.route('/get_playlist_details', methods=['GET'])
+def get_playlist_details_k():
+  playlist_id = int(request.args["playlist_id"])
+  cursor = g.conn.execute(
+      "select playlist.playlist_id, min(name) as playlist_name, string_agg(song.title, ', ') as song_names, "
+      "cast(min(date_of_creation) as text) as date_of_creation, private from playlist, songplaylist, song where "
+      "playlist.playlist_id = "
+      "songplaylist.playlist_id and song.song_id = songplaylist.song_id and playlist.playlist_id = {} group by "
+      "playlist.playlist_id;".format(
+          playlist_id))
+  playlists = []
+  for result in cursor:
+      playlists.append({
+          'playlist_name': result['playlist_name'],
+      'song_names': result['song_names'],
+      'date_of_creation': str(result['date_of_creation']),
+      'private': str(result['private'])
+    })
+  cursor.close()
+  return jsonify(Lookup_matches=playlists)
+
+@app.route('/get_user_details', methods=['GET'])
+def get_user_details_k():
+  user_id = int(request.args["user_id"])
+  cursor = g.conn.execute(
+      "select u.name, min(username) as username, cast(min(date_of_joining) as text) as date_of_joining, string_agg("
+      "foo.artist_name, ', ') as artists_followed from user_account u left outer join (select ufa.user_id as user_id, "
+      "ufa.artist_id as artist_id, a.name as artist_name from userfollowartist ufa, artist a where ufa.artist_id = "
+      "a.artist_id) as foo on u.user_id = foo.user_id where u.user_id = {} group by u.user_id;".format(
+          user_id))
+  users = []
+  for result in cursor:
+      users.append({
+          'name': result['name'],
+          'username': result['username'],
+          'date_of_joining': result['date_of_joining'],
+          'artists_followed': result['artists_followed']
+      })
+  cursor.close()
+  return jsonify(Lookup_matches=users)
 
 if __name__ == "__main__":
   import click
