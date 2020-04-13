@@ -1,0 +1,117 @@
+{% extends 'layout.html' %}
+
+{% block scripts %}
+<meta http-equiv="refresh" content="5000">
+    <script type="text/javascript" src="{{ url_for('static', filename = 'Add_Song.js') }}"></script>
+
+	<style type="text/css">
+	.topbar{
+/*	background-image: linear-gradient(135deg, rgb(5, 9, 34), rgb(80, 200, 170) 75%);*/
+	padding: 3%;
+	margin-bottom: 2%;
+	color: white;
+	}
+	input{
+    width:10%;
+    border-radius: 15px 15px 15px 15px;
+	}
+	.bold{
+		font-weight: bold;
+	}
+	</style>
+
+{% endblock %}
+
+{% block content %}
+<!-- <h1>Search Engine </h1> -->
+
+
+<div class="container" style="padding:0;">
+
+	<div class="topbar">
+		<h1>Add Song to Site</h1>
+		<hr style="border-top: 2px  solid rgba(250,250,250,0.1)">
+	</div>
+
+
+<!-- 	<form>
+        <div class="form-row align-items-center">
+          <div class="col-md-5">
+            <label class="sr-only" for="inlineFormInput">Name</label>
+            <input type="text" class="form-control mb-2" id="Song" placeholder="Song id">
+          </div>
+          <div class="col-md-5">
+            <label class="sr-only" for="inlineFormInputGroup">Username</label>
+            <div class="input-group mb-2">
+              <input type="text" class="form-control" id="Playlist" placeholder="Playlist id">
+            </div>
+          </div>
+
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary mb-2" id="Button">Submit</button>
+          </div>
+        </div>
+      </form> -->
+
+
+<form>
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      <label for="inputEmail4">Title</label>
+      <input type="email" class="form-control" id="Song" placeholder="Song name">
+    </div>
+<!--     <div class="form-group col-md-6">
+      <label for="inputPassword4">Password</label>
+      <input type="password" class="form-control" id="inputPassword4" placeholder="Password">
+    </div> -->
+  </div>
+  <div class="form-group">
+    <label for="inputAddress">Link</label>
+    <input type="text" class="form-control" id="Link" placeholder="https://....">
+  </div>
+
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      <label for="inputCity">Time Length</label>
+      <input type="text" class="form-control" id="Time">
+    </div>
+    <div class="form-group col-md-4">
+      <label for="inputState">Genre</label>
+      <input type="text" class="form-control" id="Genre">
+
+    </div>
+
+
+
+    <div class="form-group col-md-2">
+      <label class="mr-sm-2" for="inlineFormCustomSelect">Explicit</label>
+      <select class="custom-select mr-sm-2" id="Explicit">
+        <option selected>Choose...</option>
+        <option value="t">Explicit</option>
+        <option value="f">Not Explicit</option>
+      </select>
+    </div>
+
+
+  </div>
+
+
+	<button type="submit" class="btn btn-primary mb-2" id="Button">Submit</button>
+
+</form>
+
+<!--  -->
+
+	<br>
+	
+	<!-- <div>{{data}}</div> -->
+	<div>
+	    {% for n in data %}
+	    	<div>{{n}}</div>
+	    {% endfor %}
+	  </div>
+	<div id="add">
+	</div>
+</div>
+
+{% endblock %}
